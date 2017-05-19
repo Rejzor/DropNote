@@ -1,0 +1,8 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<h1>Notes</h1>
+	{% for note in notes %}
+		{{note.title}}
+	{% endfor %}
+{% endblock %}
