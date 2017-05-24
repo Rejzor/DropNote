@@ -32,7 +32,7 @@ def notes():
 @app.route('/note/<string:id>/')
 def note(id):
 	return render_template('note.html', id=id)
-
+#REGISTER FORM CLASS
 class RegisterForm(Form):
 	name = StringField('Name', [validators.Length(min=1, max=50)])
 	username = StringField('Username', [validators.Length(min=4, max=25)])
@@ -42,13 +42,14 @@ class RegisterForm(Form):
 		validators.EqualTo('confirm', message ='Passwords do not match')
 		])
 	confirm = PasswordField('Confirm Password')
+#REGISTER
 @app.route('/register', methods=['GET', 'POST'])
 def register():
 	form = RegisterForm(request.form)
 	if request.method == 'POST' and form.validate():
 		name = form.name.data
 		email = form.email.data
-		username = form.username.data
+		username = form.username.data                                                                                                                                                                                                
 		password = sha256_crypt.encrypt(str(form.password.data))
 
 		#Create Cursor
@@ -66,7 +67,58 @@ def register():
 		return redirect(url_for('index'))
 
 	return render_template('register.html', form=form)
+#USER LOGIN
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+	if request.method == 'POST':
+	#GET FORM FIELDS
+		username = request.form['username']
+		password_candidate = request.form['password']
 
+		#CREATE DB CURSOR
+		cur = mysql.connection.cursor()
+
+		#GET USER BY USERNAME
+		result = cur.execute("SELECT * FROM users WHERE username = %s", [username])
+
+		if result > 0:
+			#GET STORED HASH
+			data = cur.fetchone()
+			password = data['password']
+
+			#COMPARE PASSWORD
+
+			if sha256_crypt.verify(password_candidate, password):
+				app.logger.info('PASSWORD CORRECT')
+				session['logged_in'] = True
+				session['username'] = username
+
+				flash('You are now logged in', 'success')
+				return redirect(url_for('dashboard'))
+			else:
+				app.logger.info('BAD PASSWORD')
+				error = 'Invalid login'
+				return render_template('login.html', error=error)
+			cur.close()
+		else:
+			app.logger.info('NO USER')
+			error = 'User not found'
+			return render_template('login.html', error=error)
+
+	return render_template('login.html')
+
+#LOGOUT
+@app.route('/logout')
+def logout():
+	session.clear()
+	flash('You are now logged out', 'success')
+	return redirect(url_for('login'))
+
+#DASHBOARD
+@app.route('/dashboard')
+def dashboard():
+
+	return render_template('dashboard.html')
 
 if __name__ == '__main__':
 	app.secret_key='TOPSECRETLOL'
