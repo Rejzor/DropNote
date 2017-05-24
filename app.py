@@ -220,6 +220,7 @@ def edit_note(id):
 		cur = mysql.connection.cursor()
 		#EXECUTE
 		cur.execute('UPDATE notes SET title=%s, body=%s WHERE id = %s', (title, body, id) )
+		cur.execute('UPDATE notes SET modify_date = current_timestamp WHERE id = %s', (id) )
 
 		#COMMIT TO DB
 		mysql.connection.commit()
