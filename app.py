@@ -120,6 +120,7 @@ def is_logged_in(f):
 
 #LOGOUT
 @app.route('/logout')
+@is_logged_in
 def logout():
 	session.clear()
 	flash('You are now logged out', 'success')
@@ -129,8 +130,36 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
-
 	return render_template('dashboard.html')
+
+#NOTE FORM CLASS
+class NoteForm(Form):
+	title = TextAreaField('Title', [validators.Length(min=1, max=500)])
+	body= TextAreaField('Body', [validators.Length(min=5)])
+
+
+#ADD NOTE
+@app.route('/add_note', methods=['GET','POST'])
+@is_logged_in
+def add_note():
+	form = NoteForm(request.form)
+	if request.method == 'POST' and form.validate():
+		title = form.title.data
+		body = form.body.data
+
+		#CREATE DB CURSOR
+		cur = mysql.connection.cursor()
+		#EXECUTE
+		cur.execute('INSERT INTO notes(title, body, author) VALUES(%s, %s, %s)',(title, body, session['username']))
+
+		#COMMIT TO DB
+		mysql.connection.commit()
+		#CLOSE CONNECTION
+		cur.close()
+		flash('Note Created', 'success')
+
+		return redirect(url_for('dashboard'))
+	return render_template('add_note.html', form=form)
 
 if __name__ == '__main__':
 	app.secret_key='TOPSECRETLOL'
