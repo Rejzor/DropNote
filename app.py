@@ -196,6 +196,55 @@ def add_note():
 		return redirect(url_for('dashboard'))
 	return render_template('add_note.html', form=form)
 
+#EDIT NOTE
+@app.route('/edit_note/<string:id>', methods=['GET','POST'])
+@is_logged_in
+def edit_note(id):
+	#Create cursor
+	cur = mysql.connection.cursor()
+
+	#GET NOTE by id
+	result = cur.execute("SELECT * FROM notes WHERE id = %s", [id])
+	note = cur.fetchone()
+	#GET FORM
+	form = NoteForm(request.form)
+	#POPULATE NOTE FIELDS
+	form.title.data = note['title']
+	form.body.data = note['body']
+
+
+	if request.method == 'POST' and form.validate():
+		title = request.form['title']
+		body = request.form['body']
+		#CREATE DB CURSOR
+		cur = mysql.connection.cursor()
+		#EXECUTE
+		cur.execute('UPDATE notes SET title=%s, body=%s WHERE id = %s', (title, body, id) )
+
+		#COMMIT TO DB
+		mysql.connection.commit()
+		#CLOSE CONNECTION
+		cur.close()
+		flash('Note Updated', 'success')
+
+		return redirect(url_for('dashboard'))
+	return render_template('edit_note.html', form=form)
+@app.route('/delete_note/<string:id>', methods=['POST'])
+@is_logged_in
+def delete_note(id):
+	#Create cursor
+	cur = mysql.connection.cursor()
+	#GET NOTE by id
+	cur.execute("DELETE FROM notes WHERE id = %s", [id])
+	#COMMIT TO DB
+	mysql.connection.commit()
+	#CLOSE CONNECTION
+	cur.close()
+
+	flash('Note Deleted', 'success')
+
+	return redirect(url_for('dashboard'))
+
 if __name__ == '__main__':
 	app.secret_key='TOPSECRETLOL'
 	app.run(debug=True)

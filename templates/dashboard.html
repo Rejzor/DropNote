@@ -15,12 +15,17 @@
 		</tr>
 		{% for note in notes %}
 			<tr>
-				<th>{{note.id}}</th>
-				<th>{{note.title}}</th>
-				<th>{{note.author}}</th>
-				<th>{{note.create_date}}</th>
-				<th><a href="edit_note/{{note.id}}" class="btn btn-default pullright">Edit</a></th>
-				<th><a href="edit_note/{{note.id}}" class="btn btn-danger pullright">Delete</a></th>
+				<td>{{note.id}}</td>
+				<td>{{note.title}}</td>
+				<td>{{note.author}}</td>
+				<td>{{note.create_date}}</td>
+				<td><a href="edit_note/{{note.id}}" class="btn btn-default pull-right">Edit</a></td>
+				<td>
+					<form action="{{url_for('delete_note', id=note.id)}}" method="post">
+						<input type="hidden" name="_method" value="DELETE">
+						<input type="submit" value="Delete" class="btn btn-danger">
+					</form>
+				</td>
 			</tr>
 		{% endfor %}
 {% endblock %}
