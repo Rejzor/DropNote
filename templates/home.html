@@ -4,5 +4,11 @@
 	<div class="jumbotron text-center">
 		<h1> Welcome to DropNote App</h1>
 		<p class="lead">This application is for easy save your Notes etc. Built on Python Flask Framework</p>
+
+		{% if session.logged_in == NULL %}
+		<a href="/register" class="btn btn-primary btn-lg">Register</a>
+		<a href="/login" class="btn btn-success btn-lg">Login</a>
+
+		{% endif%}
 	</div>
 {% endblock %}

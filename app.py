@@ -1,5 +1,4 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
-from data import Notes
 from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
@@ -15,7 +14,6 @@ app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 
 
 mysql = MySQL(app)
-Notes = Notes()
 
 @app.route('/')
 def index():
@@ -25,13 +23,46 @@ def index():
 def about():
 	return render_template('about.html')
 
-@app.route('/notes')
-def notes():
-	return render_template('notes.html', notes = Notes)
+#Check if user logged in
+def is_logged_in(f):
+	@wraps(f)
+	def wrap(*args, **kwargs):
+		if 'logged_in' in session:
+			return f(*args, **kwargs)
+		else:
+			flash('Unauthorized, Please login', 'danger')
+			return redirect(url_for('login'))
 
+	return wrap
+
+@app.route('/notes')
+@is_logged_in
+def notes():
+	#CREATE CURSOR
+	cur = mysql.connection.cursor()
+
+	#GET NOTES
+	result = cur.execute('SELECT * FROM notes')
+	notes = cur.fetchall()
+	if result > 0:
+		return render_template('notes.html', notes=notes)
+	else:
+		 message = "No notes found"
+		 render_template('notes.html', message=message)
+	#CLOSE CONNECTION
+	cur.close()
+
+#SINGLE NOTE
 @app.route('/note/<string:id>/')
+@is_logged_in
 def note(id):
-	return render_template('note.html', id=id)
+		#CREATE CURSOR
+	cur = mysql.connection.cursor()
+
+	#GET NOTES
+	result = cur.execute('SELECT * FROM notes WHERE id = %s', [id])
+	note = cur.fetchone()
+	return render_template('note.html', note=note)
 #REGISTER FORM CLASS
 class RegisterForm(Form):
 	name = StringField('Name', [validators.Length(min=1, max=50)])
@@ -106,17 +137,7 @@ def login():
 			return render_template('login.html', error=error)
 
 	return render_template('login.html')
-#Check if user logged in
-def is_logged_in(f):
-	@wraps(f)
-	def wrap(*args, **kwargs):
-		if 'logged_in' in session:
-			return f(*args, **kwargs)
-		else:
-			flash('Unauthorized, Please login', 'danger')
-			return redirect(url_for('login'))
 
-	return wrap
 
 #LOGOUT
 @app.route('/logout')
@@ -130,7 +151,21 @@ def logout():
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
+	#CREATE CURSOR
+	cur = mysql.connection.cursor()
+
+	#GET NOTES
+	result = cur.execute('SELECT * FROM notes')
+	notes = cur.fetchall()
+	if result > 0:
+		return render_template('dashboard.html', notes=notes)
+	else:
+		 message = "No notes found"
+		 render_template('dashboard.html', message=message)
+
 	return render_template('dashboard.html')
+	#CLOSE CONNECTION
+	cur.close()
 
 #NOTE FORM CLASS
 class NoteForm(Form):
