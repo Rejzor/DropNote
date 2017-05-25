@@ -1,0 +1,12 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+	<h1>{{note.title}}</h1>
+	<small>Written by {{note.author}} on {{note.create_date}}</small>
+	<br>
+	<small>Last time edited {{note.modify_date}}</small>
+	<hr>
+	<div>
+		{{note.body | safe}}
+	</div>
+{% endblock %}

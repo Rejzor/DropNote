@@ -21,6 +21,7 @@
 				<td>{{note.author}}</td>
 				<td>{{note.create_date}}</td>
 				<td>{{note.modify_date}}</td>
+				<td><a href="shared_note/{{note.unique_hex}}" class="btn btn-default pull-right">Share</a></td>
 				<td><a href="edit_note/{{note.id}}" class="btn btn-default pull-right">Edit</a></td>
 				<td>
 					<form action="{{url_for('delete_note', id=note.id)}}" method="post">

@@ -3,6 +3,7 @@ from flask_mysqldb import MySQL
 from wtforms import Form, StringField, TextAreaField, PasswordField, validators
 from passlib.hash import sha256_crypt
 from functools import wraps
+import random
 app = Flask(__name__)
 
 #MYSQL CONF
@@ -63,6 +64,18 @@ def note(id):
 	result = cur.execute('SELECT * FROM notes WHERE id = %s', [id])
 	note = cur.fetchone()
 	return render_template('note.html', note=note)
+	cur.close()
+#HASH SHARE NOTE
+@app.route('/shared_note/<string:unique_hex>/')
+def shared_note(unique_hex):
+		#CREATE CURSOR
+	cur = mysql.connection.cursor()
+
+	#GET NOTES
+	result = cur.execute('SELECT * FROM notes WHERE unique_hex = %s', [unique_hex])
+	note = cur.fetchone()
+	return render_template('shared_note.html', note=note)
+	cur.close()
 #REGISTER FORM CLASS
 class RegisterForm(Form):
 	name = StringField('Name', [validators.Length(min=1, max=50)])
@@ -178,6 +191,7 @@ class NoteForm(Form):
 @is_logged_in
 def add_note():
 	form = NoteForm(request.form)
+	unique_random_hex = hex(random.getrandbits(32))
 	if request.method == 'POST' and form.validate():
 		title = form.title.data
 		body = form.body.data
@@ -185,7 +199,7 @@ def add_note():
 		#CREATE DB CURSOR
 		cur = mysql.connection.cursor()
 		#EXECUTE
-		cur.execute('INSERT INTO notes(title, body, author) VALUES(%s, %s, %s)',(title, body, session['username']))
+		cur.execute('INSERT INTO notes(title, body, author, unique_hex) VALUES(%s, %s, %s, %s)',(title, body, session['username'], unique_random_hex))
 
 		#COMMIT TO DB
 		mysql.connection.commit()
@@ -248,4 +262,4 @@ def delete_note(id):
 
 if __name__ == '__main__':
 	app.secret_key='TOPSECRETLOL'
-	app.run(debug=True)
+	app.run()
